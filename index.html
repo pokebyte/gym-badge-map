@@ -86,14 +86,20 @@ input[type=checkbox] {
 <input
     type="button"
     class="input"
-    value="Export gyms to file"
-    onclick="saveGymsToFile()"
+    value="Load gyms from gomap.eu"
+    onclick="loadGymsFromGoMap()"
 ><br>
 <input
     type="button"
     class="input"
     value="Import gyms from file"
     onclick="loadGymsFromFile()"
+><br>
+<input
+    type="button"
+    class="input"
+    value="Export gyms to file"
+    onclick="saveGymsToFile()"
 >
 </div>
 
@@ -132,7 +138,7 @@ const ZOOM = 12;
 
 // keep requests to gomap.eu at a minimum
 const RELOAD_INTERVAL = 3000;  // milliseconds
-const RELOAD_MIN_DISTANCE = 10000;  // meters
+const RELOAD_MIN_DISTANCE = 5000;  // meters
 
 var gyms = {};
 
@@ -271,7 +277,9 @@ function createGyms(json) {
         if (gyms[id]) {
             gyms[id]._coordinates = coordinates;
             gyms[id]._name = name;
-            setGymBadge(id, badge, true);
+            if (badge !== 'none') {
+                setGymBadge(id, badge, true);
+            }
         } else {
             gyms[id] = new Gym(coordinates, id, name, badge);
         }
@@ -378,14 +386,14 @@ if (!Object.keys(gyms).length) {
 }
 document.getElementById('gymSearch').focus();
 
-var previousMapCenter = map.getCenter();
+/*var previousMapCenter = map.getCenter();
 setInterval(function() {
     var currentMapCenter = map.getCenter();
     if (map.distance(currentMapCenter, previousMapCenter) >= RELOAD_MIN_DISTANCE) {
         loadGymsFromGoMap();
         previousMapCenter = currentMapCenter;
     }
-}, RELOAD_INTERVAL);
+}, RELOAD_INTERVAL);*/
 
 </script>
 
