@@ -1,1 +1,394 @@
-COMING SOON
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"></meta>
+<title>Pokémon GO Gym Badge Map</title>
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+    integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+    crossorigin=""
+></link>
+<script
+    src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+    integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+    crossorigin=""
+></script>
+
+<style>
+
+html, body, #map {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.gymName {
+    font-weight: bold;
+    line-height: 200%;
+}
+
+.badge {
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    border: 3px solid black;
+    cursor: pointer;
+}
+
+.badge:hover {
+    border: 3px solid blue;
+}
+
+.badgeHidden {
+    height: 16px;
+    width: 16px;
+    margin: 2px;
+}
+
+.input {
+    display: inline-block;
+    border: 3px solid black;
+    cursor: pointer;
+    background-color: white;
+    font-family: sans-serif;
+    font-size: 20px;
+    line-height: 30px;
+    color: blue;
+}
+
+.input:hover {
+    text-decoration: underline;
+}
+
+input[type=text] {
+    font-size: 30px;
+    width: 40vw;
+}
+
+input[type=checkbox] {
+    display: none;
+}
+
+</style>
+
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="menuTemplate">
+<input
+    type="button"
+    class="input"
+    value="Export gyms to file"
+    onclick="saveGymsToFile()"
+><br>
+<input
+    type="button"
+    class="input"
+    value="Import gyms from file"
+    onclick="loadGymsFromFile()"
+>
+</div>
+
+<div id="searchTemplate">
+<input
+    type="text"
+    placeholder="Gym Name"
+    id="gymSearch"
+    list="gymList"
+    onclick="select()"
+    onchange="openGymPopup()"
+    onkeydown="this.onchange()"
+    onkeyup="this.onchange()"
+    onkeypress="this.onchange()"
+    oninput="this.onchange()"
+    onpaste="this.onchange()"
+>
+<datalist id="gymList">
+</datalist>
+</div>
+
+<script>
+
+const SETTINGS_TITLE = 'gymBadgeMap';
+const BADGE_COLORS = {
+    'gold': 'gold',
+    'silver': 'silver',
+    'bronze': 'orangeRed',
+    'visited': 'lightGreen',
+    'none': 'green'
+};
+
+const BREMEN = [53.07, 8.79];  // latitude, longitude
+const VIEW = BREMEN;
+const ZOOM = 12;
+
+// keep requests to gomap.eu at a minimum
+const RELOAD_INTERVAL = 3000;  // milliseconds
+const RELOAD_MIN_DISTANCE = 10000;  // meters
+
+var gyms = {};
+
+var baseLayers = {};
+var overlays = {};
+var layerGroups = [];
+Object.keys(BADGE_COLORS).forEach(function(badge) {
+    var layerGroup = L.layerGroup();
+    overlays[badge] = layerGroup;
+    layerGroups.push(layerGroup);
+});
+
+var map = L.map('map', {
+    zoomControl: false,
+    layers: layerGroups
+}).setView(VIEW, ZOOM);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+L.control.zoom({position: 'bottomleft'}).addTo(map);
+
+var layersControl = L.control.layers(baseLayers, overlays, {position: 'topleft'}).addTo(map);
+layersControl = document.getElementsByClassName('leaflet-control-layers-overlays')[0];
+for (var i = 0; i < layersControl.children.length; i++) {
+    var option = layersControl.children[i];
+    option.style = 'display: inline-block;';
+    var optionLabel = option.children[0].children[1];
+    var badgeColor = optionLabel.innerHTML.trim();
+    option.children[0].removeChild(optionLabel);
+    var badge = L.DomUtil.create('span');
+    L.DomUtil.addClass(badge, 'badge');
+    badge.style = 'background-color: ' + BADGE_COLORS[badgeColor] + ';';
+    option.appendChild(badge);
+    option.onclick = function() {
+        var badge = this.children[1];
+        if (this.children[0].children[0].checked) {
+            L.DomUtil.removeClass(badge, 'badgeHidden');
+        } else {
+            L.DomUtil.addClass(badge, 'badgeHidden');
+        }
+    }
+}
+var menu = L.DomUtil.create('div', 'menuControl');
+var template = document.getElementById('menuTemplate');
+menu.innerHTML = template.innerHTML;
+document.body.removeChild(template);
+layersControl.appendChild(menu);
+
+var searchControl = L.control({position: 'topright'});
+searchControl.onAdd = function(map) {
+    this._div = L.DomUtil.create('div', 'searchControl');
+    var template = document.getElementById('searchTemplate');
+    document.body.removeChild(template);
+    this._div.innerHTML = template.innerHTML;
+    return this._div;
+};
+searchControl.addTo(map);
+
+function Gym(coordinates, id, name, badge) {
+    this._coordinates = coordinates;
+    this._id = id;
+    this._name = name || '[no name]';
+    this._badge = badge || 'none';
+    this._marker = L.circleMarker(coordinates, {
+        color: 'black',
+        fillColor: BADGE_COLORS[badge],
+        fillOpacity: 1,
+        radius: 10
+    });
+    var popup = '<div class="gymName">' + name + '</div>';
+    Object.keys(BADGE_COLORS).forEach(function(badge) {
+        popup += '<input type="button" class="badge" style="background-color: ' + BADGE_COLORS[badge] + ';" title="' + badge + '" onclick="setGymBadge(' + id + ', \'' + badge + '\')">';
+    });
+    this._marker.bindPopup(popup);
+    this._marker.on('click', function (e) {
+        map.setView(e.target.getLatLng(), map.getZoom());
+    });
+    overlays[badge].addLayer(this._marker);
+}
+
+function setGymBadge(id, badge, noSave) {
+    Object.values(gyms).forEach(function(gym) {
+        if (gym._id === id) {
+            overlays[gym._badge].removeLayer(gym._marker);
+            overlays[badge].addLayer(gym._marker);
+            gym._marker.setStyle({fillColor: BADGE_COLORS[badge]});
+            gym._badge = badge;
+        }
+    });
+    map.closePopup();
+    if (!noSave) {
+        saveGymsToLocalStorage();
+    }
+}
+
+function updateAutoCompleteList() {
+    var gymListHTML = '';
+    Object.values(gyms).forEach(function(gym) {
+        gymListHTML += '<option value="' + gym._name + '"/>';
+    });
+    document.getElementById('gymList').innerHTML = gymListHTML;
+}
+
+function openGymPopup() {
+    Object.values(gyms).forEach(function(gym) {
+        if (gym._name === document.getElementById('gymSearch').value) {
+            gym._marker.openPopup();
+            map.setView(gym._coordinates, map.getZoom());
+        }
+    });
+}
+
+function createJson() {
+    var gymsArray = [];
+    Object.values(gyms).forEach(function(gym) {
+        gymsArray.push(JSON.parse(JSON.stringify(gym, [
+            '_coordinates',
+            '_id',
+            '_name',
+            '_badge'
+        ])));
+    });
+    return JSON.stringify({gyms: gymsArray});
+}
+
+function createGyms(json) {
+    var jsonGyms = JSON.parse(json).gyms;
+    for (var i = 0; i < jsonGyms.length; i++) {
+        var gym = jsonGyms[i];
+        var coordinates = gym._coordinates || [gym.latitude, gym.longitude];
+        var id = gym._id || gym.gym_id;
+        var name = gym._name || gym.name;
+        var badge = gym._badge || 'none';
+        if (gyms[id]) {
+            gyms[id]._coordinates = coordinates;
+            gyms[id]._name = name;
+            setGymBadge(id, badge, true);
+        } else {
+            gyms[id] = new Gym(coordinates, id, name, badge);
+        }
+    }
+    saveGymsToLocalStorage();
+    updateAutoCompleteList();
+}
+
+function loadGymsFromGoMap() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            createGyms(this.responseText);
+        }
+    };
+    var bounds = map.getBounds();
+    var n = bounds._northEast.lat;
+    var e = bounds._northEast.lng;
+    var s = bounds._southWest.lat;
+    var w = bounds._southWest.lng;
+    var url = 'https://mapdata2.gomap.eu/mnew.php?&mid=0&gid=0'
+        + '&n=' + n
+        + '&e=' + e
+        + '&s=' + s
+        + '&w=' + w
+        + '&ex=%5B';  // [
+    for (var i = 0; i < 400; i++) {
+        url += i + '%2C';  // ,
+    }
+    url += '%5D';  // ]
+    xhttp.open('GET', url, true);
+    xhttp.send();
+}
+
+function loadGymsFromLocalStorage() {
+    try {
+        createGyms(localStorage.getItem(SETTINGS_TITLE));
+    } catch (error) {
+        console.log('localStorage is not available');
+    }
+}
+
+function saveGymsToLocalStorage() {
+    if (!Object.keys(gyms).length) {
+        return;
+    }
+    try {
+        localStorage.setItem(SETTINGS_TITLE, createJson());
+    } catch (error) {
+        console.log('localStorage is not available');
+    }
+}
+
+function loadGymsFromFile() {
+    const INPUT_ID = 'files';
+    var files = document.getElementById(INPUT_ID);
+    if (files) {
+        document.body.removeChild(files);
+    }
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.id = INPUT_ID;
+    fileInput.style = 'display: none;';
+    fileInput.onchange = readGymsFromFile;
+    document.body.appendChild(fileInput);
+    fileInput.click();
+}
+
+function readGymsFromFile() {
+    var files = document.getElementById('files').files;
+    if (!files.length) {
+        return;
+    }
+    var reader = new FileReader();
+    reader.onloadend = function(event) {
+        if (reader.readyState == FileReader.DONE) {
+            createGyms(reader.result);
+        }
+    };
+    reader.readAsText(files[0]);
+}
+
+function saveGymsToFile() {
+    const LINK_ID = 'link';
+    var link = document.getElementById(LINK_ID);
+    if (link) {
+        document.body.removeChild(link);
+    }
+    link = document.createElement('a');
+    var file = new Blob([createJson()], {type: 'application/json'});
+    var url = window.URL.createObjectURL(file);
+    link.href = url;
+    link.style = 'display: none;';
+    link.download = 'gyms.json';
+    link.id = LINK_ID;
+    document.body.appendChild(link);
+    link.click();
+}
+
+// init
+loadGymsFromLocalStorage();
+if (!Object.keys(gyms).length) {
+    loadGymsFromGoMap();
+}
+document.getElementById('gymSearch').focus();
+
+var previousMapCenter = map.getCenter();
+setInterval(function() {
+    var currentMapCenter = map.getCenter();
+    if (map.distance(currentMapCenter, previousMapCenter) >= RELOAD_MIN_DISTANCE) {
+        loadGymsFromGoMap();
+        previousMapCenter = currentMapCenter;
+    }
+}, RELOAD_INTERVAL);
+
+</script>
+
+</body>
+</html>
+
