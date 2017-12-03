@@ -131,6 +131,8 @@ const BREMEN = [53.07, 8.79];  // latitude, longitude
 const VIEW = BREMEN;
 const ZOOM = 12;
 
+const NUMBER_OF_POKEMON = 400;  // there are more pokemon in total, but less in the game
+
 // keep requests to gomap.eu at a minimum
 const RELOAD_INTERVAL = 3000;  // milliseconds
 const RELOAD_MIN_DISTANCE = 5000;  // meters
@@ -157,8 +159,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 L.control.zoom({position: 'bottomleft'}).addTo(map);
 
-var layersControl = L.control.layers(baseLayers, overlays, {position: 'topleft'}).addTo(map);
-layersControl = document.getElementsByClassName('leaflet-control-layers-overlays')[0];
+L.control.layers(baseLayers, overlays, {position: 'topleft'}).addTo(map);
+var layersControl = document.getElementsByClassName('leaflet-control-layers-overlays')[0];
 for (var i = 0; i < layersControl.children.length; i++) {
     var option = layersControl.children[i];
     option.style = 'display: inline-block;';
@@ -250,20 +252,21 @@ function openGymPopup() {
 function createJson() {
     var gymsArray = [];
     Object.values(gyms).forEach(function(gym) {
-        gymsArray.push(JSON.parse(JSON.stringify(gym, [
-            '_coordinates',
-            '_id',
-            '_name',
-            '_badge'
-        ])));
+        if (gym._badge !== 'none') {
+            gymsArray.push(JSON.parse(JSON.stringify(gym, [
+                '_coordinates',
+                '_id',
+                '_name',
+                '_badge'
+            ])));
+        }
     });
     return JSON.stringify({gyms: gymsArray});
 }
 
 function createGyms(json) {
     var jsonGyms = JSON.parse(json).gyms;
-    for (var i = 0; i < jsonGyms.length; i++) {
-        var gym = jsonGyms[i];
+    jsonGyms.forEach(function(gym) {
         var coordinates = gym._coordinates || [gym.latitude, gym.longitude];
         var id = gym._id || gym.gym_id;
         var name = gym._name || gym.name;
@@ -277,7 +280,7 @@ function createGyms(json) {
         } else {
             gyms[id] = new Gym(coordinates, id, name, badge);
         }
-    }
+    });
     saveGymsToLocalStorage();
     updateAutoCompleteList();
 }
@@ -300,7 +303,8 @@ function loadGymsFromGoMap() {
         + '&s=' + s
         + '&w=' + w
         + '&ex=%5B';  // [
-    for (var i = 0; i < 400; i++) {
+    // exclude all pokemon, we just need gyms
+    for (var i = 0; i < NUMBER_OF_POKEMON; i++) {
         url += i + '%2C';  // ,
     }
     url += '%5D';  // ]
@@ -375,10 +379,8 @@ function saveGymsToFile() {
 
 // init
 loadGymsFromLocalStorage();
-if (!Object.keys(gyms).length) {
-    loadGymsFromGoMap();
-}
-//document.getElementById('gymSearch').focus();
+loadGymsFromGoMap();
+document.getElementById('gymSearch').focus();
 
 /*var previousMapCenter = map.getCenter();
 setInterval(function() {
