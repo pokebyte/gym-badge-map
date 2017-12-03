@@ -110,12 +110,7 @@ input[type=checkbox] {
     id="gymSearch"
     list="gymList"
     onclick="select()"
-    onchange="openGymPopup()"
-    onkeydown="this.onchange()"
-    onkeyup="this.onchange()"
-    onkeypress="this.onchange()"
-    oninput="this.onchange()"
-    onpaste="this.onchange()"
+    oninput="openGymPopup()"
 >
 <datalist id="gymList">
 </datalist>
@@ -215,9 +210,6 @@ function Gym(coordinates, id, name, badge) {
         popup += '<input type="button" class="badge" style="background-color: ' + BADGE_COLORS[badge] + ';" title="' + badge + '" onclick="setGymBadge(' + id + ', \'' + badge + '\')">';
     });
     this._marker.bindPopup(popup);
-    this._marker.on('click', function (e) {
-        map.setView(e.target.getLatLng(), map.getZoom());
-    });
     overlays[badge].addLayer(this._marker);
 }
 
@@ -246,7 +238,9 @@ function updateAutoCompleteList() {
 
 function openGymPopup() {
     Object.values(gyms).forEach(function(gym) {
-        if (gym._name === document.getElementById('gymSearch').value) {
+        var gymSearch = document.getElementById('gymSearch');
+        if (gym._name === gymSearch.value) {
+            gymSearch.blur();
             gym._marker.openPopup();
             map.setView(gym._coordinates, map.getZoom());
         }
