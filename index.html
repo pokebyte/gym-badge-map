@@ -198,7 +198,7 @@ searchControl.addTo(map);
 
 function Gym(coordinates, id, name, badge) {
     this._coordinates = coordinates;
-    this._id = id;
+    this._id = '' + id;
     this._name = name || '[no name]';
     this._badge = badge || 'none';
     this._marker = L.circleMarker(coordinates, {
@@ -209,7 +209,7 @@ function Gym(coordinates, id, name, badge) {
     });
     var popup = '<div class="gymName">' + name + '</div>';
     Object.keys(BADGE_COLORS).forEach(function(badge) {
-        popup += '<input type="button" class="badge" style="background-color: ' + BADGE_COLORS[badge] + ';" title="' + badge + '" onclick="setGymBadge(' + id + ', \'' + badge + '\')">';
+        popup += '<input type="button" class="badge" style="background-color: ' + BADGE_COLORS[badge] + ';" title="' + badge + '" onclick="setGymBadge(\'' + id + '\', \'' + badge + '\')">';
     });
     this._marker.bindPopup(popup);
     overlays[badge].addLayer(this._marker);
