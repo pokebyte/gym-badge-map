@@ -233,7 +233,7 @@ function setGymBadge(id, badge, noSave) {
 function updateAutoCompleteList() {
     var gymListHTML = '';
     Object.values(gyms).forEach(function(gym) {
-        gymListHTML += '<option value="' + gym._name + '"/>';
+        gymListHTML += '<option value="' + gym._name.replace(/"/g, '&quot;') + '"/>';
     });
     document.getElementById('gymList').innerHTML = gymListHTML;
 }
