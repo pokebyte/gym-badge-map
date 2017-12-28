@@ -159,6 +159,34 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 L.control.zoom({position: 'bottomleft'}).addTo(map);
 
+var userLocation;
+function onLocationFound(e) {
+    if (userLocation) {
+        map.removeLayer(userLocation);
+    }
+    userLocation = L.marker(e.latlng).addTo(map);
+}
+
+function onLocationError(e) {
+    console.log(e);
+    alert(e.message);
+}
+
+map.on('locationfound', onLocationFound);
+map.on('locationerror', onLocationError);
+
+var locateControl = L.control({position: 'bottomleft'});
+locateControl.onAdd = function(map) {
+    this._div = L.DomUtil.create('div', 'leaflet-bar');
+    var a = L.DomUtil.create('a', 'leaflet-control-zoom-in leaflet-interactive', this._div);
+    a.innerHTML = '&#x1f4cd;';
+    a.addEventListener('click', function() {
+        map.locate({setView: true, maxZoom: ZOOM});
+    });
+    return this._div;
+};
+locateControl.addTo(map);
+
 L.control.layers(baseLayers, overlays, {position: 'topleft'}).addTo(map);
 var layersControl = document.getElementsByClassName('leaflet-control-layers-overlays')[0];
 for (var i = 0; i < layersControl.children.length; i++) {
