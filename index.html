@@ -177,13 +177,13 @@ map.on('locationerror', onLocationError);
 
 var locateControl = L.control({position: 'bottomleft'});
 locateControl.onAdd = function(map) {
-    this._div = L.DomUtil.create('div', 'leaflet-bar');
-    var a = L.DomUtil.create('a', 'leaflet-control-zoom-in leaflet-interactive', this._div);
+    var div = L.DomUtil.create('div', 'leaflet-bar');
+    var a = L.DomUtil.create('a', 'leaflet-control-zoom-in leaflet-interactive', div);
     a.innerHTML = '&#x1f4cd;';
     a.addEventListener('click', function() {
         map.locate({setView: true, maxZoom: ZOOM});
     });
-    return this._div;
+    return div;
 };
 locateControl.addTo(map);
 
@@ -216,11 +216,11 @@ layersControl.appendChild(menu);
 
 var searchControl = L.control({position: 'topright'});
 searchControl.onAdd = function(map) {
-    this._div = L.DomUtil.create('div', 'searchControl');
     var template = document.getElementById('searchTemplate');
     document.body.removeChild(template);
-    this._div.innerHTML = template.innerHTML;
-    return this._div;
+    var div = L.DomUtil.create('div', 'searchControl');
+    div.innerHTML = template.innerHTML;
+    return div;
 };
 searchControl.addTo(map);
 
@@ -408,7 +408,7 @@ function saveGymsToFile() {
 // init
 loadGymsFromLocalStorage();
 loadGymsFromGoMap();
-document.getElementById('gymSearch').focus();
+//document.getElementById('gymSearch').focus();
 
 /*var previousMapCenter = map.getCenter();
 setInterval(function() {
