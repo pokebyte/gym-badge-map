@@ -1,0 +1,54 @@
+html, body, #map {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.gymName {
+    font-weight: bold;
+    line-height: 200%;
+}
+
+.badge {
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    border: 3px solid black;
+    cursor: pointer;
+}
+
+.badge:hover {
+    border: 3px solid blue;
+}
+
+.badgeHidden {
+    height: 16px;
+    width: 16px;
+    margin: 2px;
+}
+
+.input {
+    display: inline-block;
+    border: 10px;
+    cursor: pointer;
+    background-color: white;
+    font-family: sans-serif;
+    font-size: 20px;
+    line-height: 30px;
+    color: blue;
+}
+
+.input:hover {
+    text-decoration: underline;
+}
+
+input[type=text] {
+    font-size: 30px;
+    width: 50vw;
+}
+
+input[type=checkbox] {
+    display: none;
+}
