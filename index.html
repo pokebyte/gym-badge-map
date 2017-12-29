@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>Pokémon GO Gym Badge Map</title>
+<title id="title">Gym Badge Map for Pokémon GO</title>
 
 <link
     rel="stylesheet"
@@ -30,27 +30,30 @@
 <input
     type="button"
     class="input"
-    value="Load gyms from gomap.eu"
-    onclick="loadGymsFromGoMap()"
+    value="Load from gomap"
+    onclick="loadGymsFromGomap()"
+    id="gomapGyms"
 ><br>
 <input
     type="button"
     class="input"
-    value="Import gyms from file"
+    value="Import"
     onclick="loadGymsFromFile()"
+    id="importGyms"
 ><br>
 <input
     type="button"
     class="input"
-    value="Export gyms to file"
+    value="Export"
     onclick="saveGymsToFile()"
+    id="exportGyms"
 >
 </div>
 
 <div id="searchTemplate">
 <input
     type="text"
-    placeholder="Gym Name"
+    placeholder="Search gyms"
     id="gymSearch"
     list="gymList"
     onclick="select()"

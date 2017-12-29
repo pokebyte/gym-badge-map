@@ -100,6 +100,27 @@ searchControl.onAdd = function(map) {
 };
 searchControl.addTo(map);
 
+function ajax(url, onResponse) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState === 4 && this.status === 200) {
+            onResponse(this.responseText);
+        }
+    };
+    xhttp.open('GET', url, true);
+    xhttp.send();
+}
+
+var translation;
+ajax('de.json', function (text) {
+    translation = JSON.parse(text);
+    document.getElementById('title').innerHTML = translation['title'];
+    document.getElementById('gomapGyms').value = translation['gomapGyms'];
+    document.getElementById('importGyms').value = translation['importGyms'];
+    document.getElementById('exportGyms').value = translation['exportGyms'];
+    document.getElementById('gymSearch').placeholder = translation['gymSearch'];
+});
+
 function Gym(coordinates, id, name, badge) {
     this._coordinates = coordinates;
     this._id = '' + id;
@@ -189,18 +210,7 @@ function createGyms(json) {
     updateAutoCompleteList();
 }
 
-function ajax(url, onResponse) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState === 4 && this.status === 200) {
-            onResponse(this.responseText);
-        }
-    };
-    xhttp.open('GET', url, true);
-    xhttp.send();
-}
-
-function loadGymsFromGoMap() {
+function loadGymsFromGomap() {
     var bounds = map.getBounds();
     var n = bounds._northEast.lat;
     var e = bounds._northEast.lng;
@@ -288,4 +298,4 @@ function saveGymsToFile() {
 // init
 loadGymsFromLocalStorage();
 ajax('gyms-default.json', createGyms);
-loadGymsFromGoMap();
+loadGymsFromGomap();
