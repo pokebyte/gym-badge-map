@@ -1,8 +1,8 @@
 const SETTINGS_TITLE = 'gymBadgeMap';
 const BADGE_COLORS = {
     'gold': 'gold',
-    'silver': 'silver',
-    'bronze': 'orangeRed',
+    'silver': 'lightSteelBlue',
+    'bronze': 'sandyBrown',
     'visited': 'lightGreen',
     'none': 'green'
 };
