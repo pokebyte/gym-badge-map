@@ -13,10 +13,6 @@ const ZOOM = 12;
 
 const NUMBER_OF_POKEMON = 400;  // there are more pokemon in total, but less in the game
 
-// keep requests to gomap.eu at a minimum
-const RELOAD_INTERVAL = 3000;  // milliseconds
-const RELOAD_MIN_DISTANCE = 5000;  // meters
-
 var gyms = {};
 
 var baseLayers = {};
@@ -193,13 +189,18 @@ function createGyms(json) {
     updateAutoCompleteList();
 }
 
-function loadGymsFromGoMap() {
+function ajax(url, onResponse) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            createGyms(this.responseText);
+        if (this.readyState === 4 && this.status === 200) {
+            onResponse(this.responseText);
         }
     };
+    xhttp.open('GET', url, true);
+    xhttp.send();
+}
+
+function loadGymsFromGoMap() {
     var bounds = map.getBounds();
     var n = bounds._northEast.lat;
     var e = bounds._northEast.lng;
@@ -216,8 +217,7 @@ function loadGymsFromGoMap() {
         url += i + '%2C';  // ,
     }
     url += '%5D';  // ]
-    xhttp.open('GET', url, true);
-    xhttp.send();
+    ajax(url, createGyms);
 }
 
 function loadGymsFromLocalStorage() {
@@ -287,14 +287,5 @@ function saveGymsToFile() {
 
 // init
 loadGymsFromLocalStorage();
+ajax('gyms-default.json', createGyms);
 loadGymsFromGoMap();
-//document.getElementById('gymSearch').focus();
-
-/*var previousMapCenter = map.getCenter();
-setInterval(function() {
-    var currentMapCenter = map.getCenter();
-    if (map.distance(currentMapCenter, previousMapCenter) >= RELOAD_MIN_DISTANCE) {
-        loadGymsFromGoMap();
-        previousMapCenter = currentMapCenter;
-    }
-}, RELOAD_INTERVAL);*/
