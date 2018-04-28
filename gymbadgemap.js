@@ -11,8 +11,6 @@ const BREMEN = [53.07, 8.79];  // latitude, longitude
 const VIEW = BREMEN;
 const ZOOM = 12;
 
-const NUMBER_OF_POKEMON = 400;  // there are more pokemon in total, but less in the game
-
 var gyms = {};
 
 var baseLayers = {};
@@ -115,7 +113,6 @@ var translation;
 ajax('de.json', function (text) {
     translation = JSON.parse(text);
     document.getElementById('title').innerHTML = translation['title'];
-    document.getElementById('gomapGyms').value = translation['gomapGyms'];
     document.getElementById('importGyms').value = translation['importGyms'];
     document.getElementById('exportGyms').value = translation['exportGyms'];
     document.getElementById('gymSearch').placeholder = translation['gymSearch'];
@@ -210,26 +207,6 @@ function createGyms(json) {
     updateAutoCompleteList();
 }
 
-function loadGymsFromGomap() {
-    var bounds = map.getBounds();
-    var n = bounds._northEast.lat;
-    var e = bounds._northEast.lng;
-    var s = bounds._southWest.lat;
-    var w = bounds._southWest.lng;
-    var url = 'https://mapdata2.gomap.eu/mnew.php?&mid=0&gid=0'
-        + '&n=' + n
-        + '&e=' + e
-        + '&s=' + s
-        + '&w=' + w
-        + '&ex=%5B';  // [
-    // exclude all pokemon, we just need gyms
-    for (var i = 0; i < NUMBER_OF_POKEMON; i++) {
-        url += i + '%2C';  // ,
-    }
-    url += '%5D';  // ]
-    ajax(url, createGyms);
-}
-
 function loadGymsFromLocalStorage() {
     try {
         createGyms(localStorage.getItem(SETTINGS_TITLE));
@@ -297,5 +274,5 @@ function saveGymsToFile() {
 
 // init
 loadGymsFromLocalStorage();
-ajax('gyms-default.json', createGyms);
-loadGymsFromGomap();
+ajax('gyms-gomap.json', createGyms);
+ajax('gyms-gymhuntr.json', createGyms);
