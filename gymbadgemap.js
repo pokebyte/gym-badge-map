@@ -68,6 +68,7 @@ for (var i = 0; i < layersControl.children.length; i++) {
     var badge = L.DomUtil.create('span');
     L.DomUtil.addClass(badge, 'badge');
     badge.style = 'background-color: ' + BADGE_COLORS[badgeColor] + ';';
+    badge.innerHTML += '<span id="' + badgeColor + 'BadgeCount" class="badgeCount"></span>';
     option.appendChild(badge);
     option.onclick = function() {
         var badge = this.children[1];
@@ -78,7 +79,7 @@ for (var i = 0; i < layersControl.children.length; i++) {
         }
     }
 }
-var menu = L.DomUtil.create('div', 'menuControl');
+var menu = document.createElement('div');
 var template = document.getElementById('menuTemplate');
 menu.innerHTML = template.innerHTML;
 document.body.removeChild(template);
@@ -147,6 +148,7 @@ function setGymBadge(id, badge, noSave) {
     if (!noSave) {
         saveGymsToLocalStorage();
     }
+    updateBadgeCounts();
 }
 
 function updateAutoCompleteList() {
@@ -155,6 +157,21 @@ function updateAutoCompleteList() {
         gymListHTML += '<option value="' + gym._name.replace(/"/g, '&quot;') + '"/>';
     });
     document.getElementById('gymList').innerHTML = gymListHTML;
+}
+
+function updateBadgeCounts() {
+    var badgeCounts = {};
+    Object.values(gyms).forEach(function(gym) {
+        var badge = gym._badge;
+        if (badgeCounts[badge]) {
+            badgeCounts[badge]++;
+        } else {
+            badgeCounts[badge] = 1;
+        }
+    });
+    Object.keys(BADGE_COLORS).forEach(function(badge) {
+        document.getElementById(badge + 'BadgeCount').innerHTML = badgeCounts[badge] || 0;
+    });
 }
 
 function openGymPopup() {
@@ -202,6 +219,7 @@ function createGyms(json) {
     });
     saveGymsToLocalStorage();
     updateAutoCompleteList();
+    updateBadgeCounts();
 }
 
 function loadGymsFromLocalStorage() {

@@ -29,6 +29,13 @@ html, body, #map {
     margin: 2px;
 }
 
+.badgeCount {
+    display: inline-block;
+    width: 20px;
+    padding-top: 24px;
+    text-align: center;
+}
+
 .input {
     display: inline-block;
     border: 10px;
