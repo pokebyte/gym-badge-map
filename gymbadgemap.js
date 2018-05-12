@@ -15,16 +15,13 @@ var gyms = {};
 
 var baseLayers = {};
 var overlays = {};
-var layerGroups = [];
 Object.keys(BADGE_COLORS).forEach(function(badge) {
-    var layerGroup = L.layerGroup();
-    overlays[badge] = layerGroup;
-    layerGroups.push(layerGroup);
+    overlays[badge] = L.layerGroup();
 });
 
 var map = L.map('map', {
     zoomControl: false,
-    layers: layerGroups
+    layers: Object.values(overlays)
 }).setView(VIEW, ZOOM);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -34,28 +31,27 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 L.control.zoom({position: 'bottomleft'}).addTo(map);
 
 var userLocation;
-function onLocationFound(e) {
-    if (userLocation) {
+map.on('locationfound', function(e) {
+    function removeUserLocation() {
         map.removeLayer(userLocation);
     }
+    if (userLocation) {
+        removeUserLocation();
+    }
     userLocation = L.marker(e.latlng).addTo(map);
-}
-
-function onLocationError(e) {
+    userLocation.on('click', removeUserLocation);
+});
+map.on('locationerror', function(e) {
     console.log(e);
     alert(e.message);
-}
-
-map.on('locationfound', onLocationFound);
-map.on('locationerror', onLocationError);
-
+});
 var locateControl = L.control({position: 'bottomleft'});
 locateControl.onAdd = function(map) {
     var div = L.DomUtil.create('div', 'leaflet-bar');
     var a = L.DomUtil.create('a', 'leaflet-control-zoom-in leaflet-interactive', div);
-    a.innerHTML = '&#x1f4cd;';
+    a.innerHTML = '&#x1f4cd;';  // pin symbol
     a.addEventListener('click', function() {
-        map.locate({setView: true, maxZoom: ZOOM});
+        map.locate({setView: true, maxZoom: map.getZoom()});
     });
     return div;
 };
@@ -131,7 +127,8 @@ function Gym(coordinates, id, name, badge) {
     });
     var popup = '<div class="gymName">' + name + '</div>';
     Object.keys(BADGE_COLORS).forEach(function(badge) {
-        popup += '<input type="button" class="badge" style="background-color: ' + BADGE_COLORS[badge] + ';" title="' + badge + '" onclick="setGymBadge(\'' + id + '\', \'' + badge + '\')">';
+        popup += '<input type="button" class="badge" style="background-color: ' + BADGE_COLORS[badge]
+            + ';" title="' + badge + '" onclick="setGymBadge(\'' + id + '\', \'' + badge + '\')">';
     });
     this._marker.bindPopup(popup);
     overlays[badge].addLayer(this._marker);
@@ -235,7 +232,7 @@ function loadGymsFromFile() {
     var fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.id = INPUT_ID;
-    fileInput.style = 'display: none;';
+    fileInput.style.display = 'none';
     fileInput.onchange = readGymsFromFile;
     document.body.appendChild(fileInput);
     fileInput.click();
@@ -248,7 +245,7 @@ function readGymsFromFile() {
     }
     var reader = new FileReader();
     reader.onloadend = function(event) {
-        if (reader.readyState == FileReader.DONE) {
+        if (reader.readyState === FileReader.DONE) {
             createGyms(reader.result);
         }
     };
@@ -263,9 +260,8 @@ function saveGymsToFile() {
     }
     link = document.createElement('a');
     var file = new Blob([createJson()], {type: 'application/json'});
-    var url = window.URL.createObjectURL(file);
-    link.href = url;
-    link.style = 'display: none;';
+    link.href = window.URL.createObjectURL(file);
+    link.style.display = 'none';
     link.download = 'gyms.json';
     link.id = LINK_ID;
     document.body.appendChild(link);
