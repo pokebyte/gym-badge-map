@@ -120,7 +120,7 @@ function Gym(coordinates, id, name, badge) {
     this._id = '' + id;
     this._name = name || '[no name]';
     this._badge = badge || 'none';
-    this._marker = L.circleMarker(coordinates, {
+    var marker = L.circleMarker(coordinates, {
         color: 'black',
         fillColor: BADGE_COLORS[badge],
         fillOpacity: 1,
@@ -131,8 +131,13 @@ function Gym(coordinates, id, name, badge) {
         popup += '<input type="button" class="badge" style="background-color: ' + BADGE_COLORS[badge]
             + ';" title="' + badge + '" onclick="setGymBadge(\'' + id + '\', \'' + badge + '\')">';
     });
-    this._marker.bindPopup(popup);
-    overlays[badge].addLayer(this._marker);
+    marker.bindPopup(popup);
+    marker.bindTooltip(name);
+    marker.on('click', function() {
+        marker.closeTooltip();
+    });
+    overlays[badge].addLayer(marker);
+    this._marker = marker;
 }
 
 function setGymBadge(id, badge, noSave) {
