@@ -19,11 +19,6 @@ html, body, #map {
     cursor: pointer;
 }
 
-.badgeLegacy {
-    background-color: lightGray;
-    border: 3px solid gray;
-}
-
 .badge:hover {
     border: 3px solid blue;
 }
@@ -39,6 +34,31 @@ html, body, #map {
     width: 20px;
     padding-top: 24px;
     text-align: center;
+}
+
+.legacy {
+    background-color: lightGray;
+    border: 3px solid gray;
+}
+
+.gold {
+    background-color: gold;
+}
+
+.silver {
+    background-color: lightsteelblue;
+}
+
+.bronze {
+    background-color: sandybrown;
+}
+
+.visited {
+    background-color: palegreen;
+}
+
+.none {
+    background-color: darkseagreen;
 }
 
 .input {

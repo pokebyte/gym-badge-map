@@ -35,7 +35,7 @@
     onchange="toggleLegacyGyms()"
     id="legacyGyms"
 >
-<span class="badge badgeLegacy"></span>
+<span class="badge legacy"></span>
 <span id="legacyGymsLabel">Legacy gyms</span>
 </label>
 <input
@@ -68,6 +68,7 @@
     list="gymList"
     onclick="select()"
     oninput="openGymPopup()"
+    onfocus="this.value = ''"
 >
 <datalist id="gymList">
 </datalist>

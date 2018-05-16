@@ -1,15 +1,18 @@
 const SETTINGS_TITLE = 'gymBadgeMap';
 const BADGE_COLORS = {
     gold: 'gold',
-    silver: 'lightSteelBlue',
-    bronze: 'sandyBrown',
-    visited: 'lightGreen',
-    none: 'green'
+    silver: 'lightsteelblue',
+    bronze: 'sandybrown',
+    visited: 'palegreen',
+    none: 'darkseagreen'
 };
 const EXTRA_COLORS = {
     legacy: 'gray',
     active: 'black'
 };
+
+const ASCII_ZERO = 48;
+const ASCII_SEARCH = 102;  // f
 
 const BREMEN = [53.07, 8.79];  // latitude, longitude
 const VIEW = BREMEN;
@@ -17,6 +20,7 @@ const ZOOM = 12;
 
 var gyms = {};
 var legacyGyms = {};
+var popupGymId = null;
 
 var baseLayers = {};
 var overlays = {};
@@ -127,8 +131,9 @@ function Gym(coordinates, id, name, badge, legacy) {
     this._name = name || '[no name]';
     this._badge = badge || 'none';
     this._legacy = legacy || false;
+    var extraColor = legacy ? EXTRA_COLORS.legacy : EXTRA_COLORS.active;
     var marker = L.circleMarker(coordinates, {
-        color: legacy ? EXTRA_COLORS.legacy : EXTRA_COLORS.active,
+        color: extraColor,
         fillColor: BADGE_COLORS[badge],
         fillOpacity: 1,
         radius: 10
@@ -139,28 +144,39 @@ function Gym(coordinates, id, name, badge, legacy) {
             + ';" title="' + badge + '" onclick="setGymBadge(\'' + id + '\', \'' + badge + '\')">';
     });
     marker.bindPopup(popup);
-    marker.bindTooltip(name);
+    marker.bindTooltip(
+        '<b style="color: ' + extraColor + ';">' + name + '</b>',
+        {className: badge, opacity: 1}
+    );
     marker.on('click', function() {
         marker.closeTooltip();
+    });
+    marker.on('popupopen', function() {
+        popupGymId = id;
     });
     this._marker = marker;
     overlays[badge].addLayer(marker);
 }
 
 function setGymBadge(id, badge, noSave) {
-    Object.values(gyms).forEach(function(gym) {
-        if (gym._id === id) {
-            overlays[gym._badge].removeLayer(gym._marker);
-            overlays[badge].addLayer(gym._marker);
-            gym._marker.setStyle({fillColor: BADGE_COLORS[badge]});
-            gym._badge = badge;
-        }
-    });
+    var gym = gyms[id];
+    var extraColor = gym._legacy ? EXTRA_COLORS.legacy : EXTRA_COLORS.active;
+    var marker = gym._marker;
+    overlays[gym._badge].removeLayer(marker);
+    overlays[badge].addLayer(marker);
+    marker.setStyle({fillColor: BADGE_COLORS[badge]});
+    marker.unbindTooltip();
+    marker.bindTooltip(
+        '<b style="color: ' + extraColor + ';">' + gym._name + '</b>',
+        {className: badge, opacity: 1}
+    );
+    gym._badge = badge;
     map.closePopup();
     if (!noSave) {
         saveGymsToLocalStorage();
     }
     updateBadgeCounts();
+    popupGymId = null;
 }
 
 function updateAutoCompleteList() {
@@ -198,7 +214,7 @@ function openGymPopup() {
 }
 
 function toggleLegacyGyms() {
-    document.getElementsByClassName('badgeLegacy')[0].classList.toggle('badgeHidden');
+    document.getElementsByClassName('legacy')[0].classList.toggle('badgeHidden');
     var show = document.getElementById('legacyGyms').checked;
     Object.values(legacyGyms).forEach(function(gym) {
         if (show) {
@@ -232,15 +248,22 @@ function createGyms(json) {
         var name = gym._name || gym.name;
         var badge = gym._badge || 'none';
         var legacy = gym._legacy || false;
-        if (gyms[id]) {
-            gyms[id]._coordinates = coordinates;
-            gyms[id]._name = name;
+        gym = gyms[id];
+        if (gym) {
+            gym._coordinates = coordinates;
+            gym._name = name;
             if (badge !== 'none') {
                 setGymBadge(id, badge, true);
             }
             if (legacy) {
-                gyms[id]._legacy = true;
-                gyms[id]._marker.setStyle({color: EXTRA_COLORS.legacy});
+                gym._legacy = true;
+                var marker = gym._marker;
+                var tooltip = marker.getTooltip();
+                marker.setStyle({color: EXTRA_COLORS.legacy});
+                tooltip._content = tooltip._content.replace(
+                    'style="color: ' + EXTRA_COLORS.active + ';',
+                    'style="color: ' + EXTRA_COLORS.legacy + ';'
+                );
             }
         } else {
             gyms[id] = new Gym(coordinates, id, name, badge, legacy);
@@ -318,7 +341,22 @@ function saveGymsToFile() {
     link.click();
 }
 
-// init
+window.onkeypress = function(event) {
+    var key = event.keyCode || event.which;
+    var badges = Object.keys(BADGE_COLORS);
+    var gymSearch = document.getElementById('gymSearch');
+    var update = false;
+    if (popupGymId && key > ASCII_ZERO && key <= ASCII_ZERO + badges.length) {
+        setGymBadge(popupGymId, badges[key - 1 - ASCII_ZERO]);
+        update = true;
+    }
+    if (update || key === ASCII_SEARCH && gymSearch !== document.activeElement) {
+        setTimeout(function() {
+            gymSearch.focus();
+        }, 0);
+    }
+};
+
 loadGymsFromLocalStorage();
 ajax('gyms-gomap.json', createGyms);
 ajax('gyms-gymhuntr.json', createGyms);
