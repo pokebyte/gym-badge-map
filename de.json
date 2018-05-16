@@ -1,5 +1,6 @@
 {
     "title": "Arena-Orden-Karte für Pokémon GO",
+    "legacyGyms": "Ehemalige Arenen",
     "importGyms": "Importieren",
     "exportGyms": "Exportieren",
     "gymSearch": "Suche Arenen"

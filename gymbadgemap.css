@@ -19,6 +19,11 @@ html, body, #map {
     cursor: pointer;
 }
 
+.badgeLegacy {
+    background-color: lightGray;
+    border: 3px solid gray;
+}
+
 .badge:hover {
     border: 3px solid blue;
 }
@@ -58,4 +63,8 @@ input[type=text] {
 
 input[type=checkbox] {
     display: none;
+}
+
+#legacyGymsLabel {
+    vertical-align: 40%;
 }

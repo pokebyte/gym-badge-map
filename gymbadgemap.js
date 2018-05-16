@@ -1,10 +1,14 @@
 const SETTINGS_TITLE = 'gymBadgeMap';
 const BADGE_COLORS = {
-    'gold': 'gold',
-    'silver': 'lightSteelBlue',
-    'bronze': 'sandyBrown',
-    'visited': 'lightGreen',
-    'none': 'green'
+    gold: 'gold',
+    silver: 'lightSteelBlue',
+    bronze: 'sandyBrown',
+    visited: 'lightGreen',
+    none: 'green'
+};
+const EXTRA_COLORS = {
+    legacy: 'gray',
+    active: 'black'
 };
 
 const BREMEN = [53.07, 8.79];  // latitude, longitude
@@ -12,6 +16,7 @@ const VIEW = BREMEN;
 const ZOOM = 12;
 
 var gyms = {};
+var legacyGyms = {};
 
 var baseLayers = {};
 var overlays = {};
@@ -110,18 +115,20 @@ var translation;
 ajax('de.json', function (text) {
     translation = JSON.parse(text);
     document.getElementById('title').innerHTML = translation['title'];
+    document.getElementById('legacyGymsLabel').innerHTML = translation['legacyGyms'];
     document.getElementById('importGyms').value = translation['importGyms'];
     document.getElementById('exportGyms').value = translation['exportGyms'];
     document.getElementById('gymSearch').placeholder = translation['gymSearch'];
 });
 
-function Gym(coordinates, id, name, badge) {
+function Gym(coordinates, id, name, badge, legacy) {
     this._coordinates = coordinates;
     this._id = '' + id;
     this._name = name || '[no name]';
     this._badge = badge || 'none';
+    this._legacy = legacy || false;
     var marker = L.circleMarker(coordinates, {
-        color: 'black',
+        color: legacy ? EXTRA_COLORS.legacy : EXTRA_COLORS.active,
         fillColor: BADGE_COLORS[badge],
         fillOpacity: 1,
         radius: 10
@@ -136,8 +143,8 @@ function Gym(coordinates, id, name, badge) {
     marker.on('click', function() {
         marker.closeTooltip();
     });
-    overlays[badge].addLayer(marker);
     this._marker = marker;
+    overlays[badge].addLayer(marker);
 }
 
 function setGymBadge(id, badge, noSave) {
@@ -190,6 +197,18 @@ function openGymPopup() {
     });
 }
 
+function toggleLegacyGyms() {
+    document.getElementsByClassName('badgeLegacy')[0].classList.toggle('badgeHidden');
+    var show = document.getElementById('legacyGyms').checked;
+    Object.values(legacyGyms).forEach(function(gym) {
+        if (show) {
+            overlays[gym._badge].addLayer(gym._marker);
+        } else {
+            overlays[gym._badge].removeLayer(gym._marker);
+        }
+    });
+}
+
 function createJson() {
     var gymsArray = [];
     Object.values(gyms).forEach(function(gym) {
@@ -212,14 +231,22 @@ function createGyms(json) {
         var id = gym._id || gym.gym_id;
         var name = gym._name || gym.name;
         var badge = gym._badge || 'none';
+        var legacy = gym._legacy || false;
         if (gyms[id]) {
             gyms[id]._coordinates = coordinates;
             gyms[id]._name = name;
             if (badge !== 'none') {
                 setGymBadge(id, badge, true);
             }
+            if (legacy) {
+                gyms[id]._legacy = true;
+                gyms[id]._marker.setStyle({color: EXTRA_COLORS.legacy});
+            }
         } else {
-            gyms[id] = new Gym(coordinates, id, name, badge);
+            gyms[id] = new Gym(coordinates, id, name, badge, legacy);
+        }
+        if (legacy) {
+            legacyGyms[id] = gyms[id];
         }
     });
     saveGymsToLocalStorage();
@@ -295,3 +322,5 @@ function saveGymsToFile() {
 loadGymsFromLocalStorage();
 ajax('gyms-gomap.json', createGyms);
 ajax('gyms-gymhuntr.json', createGyms);
+ajax('gyms-pokemongomap.json', createGyms);
+ajax('gyms-intel.json', createGyms);
