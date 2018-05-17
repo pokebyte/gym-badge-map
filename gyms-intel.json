@@ -1,1 +1,10 @@
-{"gyms":[{"_name":"Jacobs Wurth","_coordinates":[53.127247,8.900259],"_id":"53.127247,8.900259"},{"_name":"Borgfeld Geschichte","_coordinates":[53.121978,8.906089],"_id":"53.121978,8.906089"},{"_name":"Telefonzellen-Bücherei","_coordinates":[53.145926,8.907719],"_id":"53.145926,8.907719"},{"_name":"Der Strudel","_coordinates":[53.099115,8.838033],"_id":"53.099115,8.838033"},{"_name":"Station 3 - Klingt Holz immer gleich?","_coordinates":[53.105073,8.833523],"_id":"53.105073,8.833523"},{"_name":"Infotafel Stiftung NordWest Natur","_coordinates":[53.128688,8.922346],"_id":"53.128688,8.922346"},{"_name":"Überschwemmungslandschaften","_coordinates":[53.122651,8.946568],"_id":"53.122651,8.946568"},{"_name":"Skulptur am Brückenbogen","_coordinates":[53.097797,8.834193],"_id":"53.097797,8.834193","_legacy":true}]}
+{"gyms":[
+{"_name":"Jacobs Wurth","_coordinates":[53.127247,8.900259],"_id":"53.127247-8.900259"},
+{"_name":"Borgfeld Geschichte","_coordinates":[53.121978,8.906089],"_id":"53.121978-8.906089"},
+{"_name":"Telefonzellen-Bücherei","_coordinates":[53.145926,8.907719],"_id":"53.145926-8.907719"},
+{"_name":"Der Strudel","_coordinates":[53.099115,8.838033],"_id":"53.099115-8.838033"},
+{"_name":"Station 3 - Klingt Holz immer gleich?","_coordinates":[53.105073,8.833523],"_id":"53.105073-8.833523"},
+{"_name":"Infotafel Stiftung NordWest Natur","_coordinates":[53.128688,8.922346],"_id":"53.128688-8.922346"},
+{"_name":"Überschwemmungslandschaften","_coordinates":[53.122651,8.946568],"_id":"53.122651-8.946568"},
+{"_name":"Skulptur am Brückenbogen","_coordinates":[53.097797,8.834193],"_id":"53.097797-8.834193","_legacy":true}
+]}
