@@ -325,7 +325,7 @@
 {"_coordinates":[53.112877,8.847814],"_id":65163,"_name":"Moin Raupe"},
 {"_coordinates":[53.125145,8.745787],"_id":65087,"_name":"Kunst Im Teich"},
 {"_coordinates":[53.070152,8.835448],"_id":65030,"_name":"Max, der Zaubervogel"},
-{"_coordinates":[53.101212,8.879647],"_id":65025,"_name":"Chinese Dragon Sculpture"},
+{"_coordinates":[53.101212,8.879647],"_id":65025,"_name":"Chinese Dragon Sculpture","_legacy":true},
 {"_coordinates":[53.151161,8.709161],"_id":65017,"_name":"Feuerdrache"},
 {"_coordinates":[53.222248,8.801519],"_id":65011,"_name":"Katholische Pfarrkirche zur Heiligen Familie"},
 {"_coordinates":[53.073833,8.834464],"_id":65008,"_name":"Bremen Mural"},
